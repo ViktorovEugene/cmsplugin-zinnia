@@ -131,7 +131,7 @@ class RandomEntriesPlugin(ZinniaAppInstanceAbstract):
 
 
 @python_2_unicode_compatible
-class QueryEntriesPlugin(CMSPlugin):
+class QueryEntriesPlugin(ZinniaAppInstanceAbstract):
     """
     CMS Plugin for displaying entries
     based on a search pattern
@@ -164,7 +164,7 @@ class QueryEntriesPlugin(CMSPlugin):
 
 
 @python_2_unicode_compatible
-class CalendarEntriesPlugin(CMSPlugin):
+class CalendarEntriesPlugin(ZinniaAppInstanceAbstract):
     """
     CMS Plugin for displaying a calendar with
     published entries

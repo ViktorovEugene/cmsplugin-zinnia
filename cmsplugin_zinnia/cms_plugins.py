@@ -18,7 +18,8 @@ from zinnia.managers import tags_published
 from zinnia.middleware.zinnia_app import get_current_apps
 from zinnia.middleware.zinnia_app import _thread_locals as zinnia_thread_locals
 
-from cmsplugin_zinnia.models import RandomEntriesPlugin
+from cmsplugin_zinnia.models import RandomEntriesPlugin, \
+    ZinniaAppInstanceAbstract
 from cmsplugin_zinnia.models import LatestEntriesPlugin
 from cmsplugin_zinnia.models import SelectedEntriesPlugin
 from cmsplugin_zinnia.models import QueryEntriesPlugin
@@ -46,6 +47,9 @@ def render_with_current_app(func):
 def render_template_with_current_app(func):
     @wraps(func)
     def wrapper(self, context, instance, placeholder):
+        if not isinstance(instance, ZinniaAppInstanceAbstract):
+            return func(self, context, instance, placeholder)
+
         template = get_template(func(self, context, instance, placeholder))
         render_origin = template.render
 
@@ -72,6 +76,10 @@ class ZinniaCMSPluginBase(CMSPluginBase):
         Base icon for Zinnia's plugins
         """
         return staticfiles_storage.url('cmsplugin_zinnia/img/plugin.png')
+
+    @render_template_with_current_app
+    def _get_render_template(self, context, instance, placeholder):
+        return super()._get_render_template(context, instance, placeholder)
 
 
 class CMSLatestEntriesPlugin(ZinniaCMSPluginBase):
@@ -178,10 +186,6 @@ class CMSRandomEntriesPlugin(ZinniaCMSPluginBase):
                                          'zinnia/tags/entries_random.html')
         return context
 
-    @render_template_with_current_app
-    def _get_render_template(self, context, instance, placeholder):
-        return super()._get_render_template(context, instance, placeholder)
-
 
 class CMSQueryEntriesPlugin(ZinniaCMSPluginBase):
     """
@@ -190,8 +194,9 @@ class CMSQueryEntriesPlugin(ZinniaCMSPluginBase):
     model = QueryEntriesPlugin
     name = _('Query entries')
     render_template = 'cmsplugin_zinnia/entry_list.html'
-    fields = ('query', 'number_of_entries', 'template_to_render')
+    fields = ('query', 'number_of_entries', 'template_to_render', 'app')
 
+    @render_with_current_app
     def render(self, context, instance, placeholder):
         """
         Update the context with plugin's data
@@ -214,7 +219,7 @@ class CMSCalendarEntriesPlugin(ZinniaCMSPluginBase):
     name = _('Calendar entries')
     render_template = 'cmsplugin_zinnia/entries_calendar.html'
     fieldsets = ((None, {
-        'fields': (('year', 'month'),),
+        'fields': (('year', 'month'), 'app'),
         'description': _("If you don't set year and month, "
                          "the current month will be used.")}),)
     form = CalendarEntriesAdminForm

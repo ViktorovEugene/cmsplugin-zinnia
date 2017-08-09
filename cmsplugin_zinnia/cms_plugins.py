@@ -5,6 +5,7 @@ from functools import wraps
 
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.template.loader import get_template
 
 from tagging.models import TaggedItem
 
@@ -38,6 +39,23 @@ def render_with_current_app(func):
     def wrapper(self, context, instance, placeholder):
         with mock_current_app(instance.app):
             return func(self, context, instance, placeholder)
+
+    return wrapper
+
+
+def render_template_with_current_app(func):
+    @wraps(func)
+    def wrapper(self, context, instance, placeholder):
+        template = get_template(func(self, context, instance, placeholder))
+        render_origin = template.render
+
+        @wraps(template.render)
+        def render(*args, **kwargs):
+            with mock_current_app(instance.app):
+                return render_origin(*args, **kwargs)
+
+        template.render = render
+        return template
 
     return wrapper
 
@@ -148,7 +166,7 @@ class CMSRandomEntriesPlugin(ZinniaCMSPluginBase):
     model = RandomEntriesPlugin
     name = _('Random entries')
     render_template = 'cmsplugin_zinnia/entries_random.html'
-    fields = ('number_of_entries', 'template_to_render')
+    fields = ('number_of_entries', 'template_to_render', 'app')
 
     def render(self, context, instance, placeholder):
         """
@@ -159,6 +177,10 @@ class CMSRandomEntriesPlugin(ZinniaCMSPluginBase):
         context['template_to_render'] = (str(instance.template_to_render) or
                                          'zinnia/tags/entries_random.html')
         return context
+
+    @render_template_with_current_app
+    def _get_render_template(self, context, instance, placeholder):
+        return super()._get_render_template(context, instance, placeholder)
 
 
 class CMSQueryEntriesPlugin(ZinniaCMSPluginBase):

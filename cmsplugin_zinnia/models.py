@@ -114,7 +114,7 @@ class SelectedEntriesPlugin(CMSPlugin):
 
 
 @python_2_unicode_compatible
-class RandomEntriesPlugin(CMSPlugin):
+class RandomEntriesPlugin(ZinniaAppInstanceAbstract):
     """
     CMS Plugin for displaying random entries
     """

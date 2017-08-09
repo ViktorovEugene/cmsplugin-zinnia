@@ -18,12 +18,10 @@ from zinnia.managers import tags_published
 from zinnia.middleware.zinnia_app import get_current_apps
 from zinnia.middleware.zinnia_app import _thread_locals as zinnia_thread_locals
 
-from cmsplugin_zinnia.models import RandomEntriesPlugin, \
-    ZinniaAppInstanceAbstract
-from cmsplugin_zinnia.models import LatestEntriesPlugin
-from cmsplugin_zinnia.models import SelectedEntriesPlugin
-from cmsplugin_zinnia.models import QueryEntriesPlugin
-from cmsplugin_zinnia.models import CalendarEntriesPlugin
+from cmsplugin_zinnia.models import (
+    RandomEntriesPlugin, ZinniaAppInstanceAbstract, ZinniaAppInstancePlugin,
+    LatestEntriesPlugin, SelectedEntriesPlugin, QueryEntriesPlugin,
+    CalendarEntriesPlugin)
 from cmsplugin_zinnia.forms import CalendarEntriesAdminForm
 
 
@@ -68,6 +66,7 @@ class ZinniaCMSPluginBase(CMSPluginBase):
     """
     Base plugin for cmsplugin_zinnia
     """
+    model = ZinniaAppInstancePlugin
     module = 'Zinnia'
     text_enabled = True
 

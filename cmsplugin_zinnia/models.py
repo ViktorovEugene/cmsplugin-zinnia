@@ -27,6 +27,10 @@ class ZinniaAppInstanceAbstract(CMSPlugin):
         abstract = True
 
 
+class ZinniaAppInstancePlugin(ZinniaAppInstanceAbstract):
+    pass
+
+
 @python_2_unicode_compatible
 class LatestEntriesPlugin(ZinniaAppInstanceAbstract):
     """

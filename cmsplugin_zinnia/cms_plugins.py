@@ -1,5 +1,7 @@
 """Plugins for CMS"""
 import itertools
+from contextlib import contextmanager
+from functools import wraps
 
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -12,6 +14,8 @@ from cms.plugin_base import CMSPluginBase
 from zinnia.models.entry import Entry
 from zinnia.models.author import Author
 from zinnia.managers import tags_published
+from zinnia.middleware.zinnia_app import get_current_apps
+from zinnia.middleware.zinnia_app import _thread_locals as zinnia_thread_locals
 
 from cmsplugin_zinnia.models import RandomEntriesPlugin
 from cmsplugin_zinnia.models import LatestEntriesPlugin
@@ -19,6 +23,23 @@ from cmsplugin_zinnia.models import SelectedEntriesPlugin
 from cmsplugin_zinnia.models import QueryEntriesPlugin
 from cmsplugin_zinnia.models import CalendarEntriesPlugin
 from cmsplugin_zinnia.forms import CalendarEntriesAdminForm
+
+
+@contextmanager
+def mock_current_app(current_app):
+    reserved_current_apps = get_current_apps()
+    zinnia_thread_locals.apps = [current_app] if current_app else None
+    yield
+    zinnia_thread_locals.apps = reserved_current_apps
+
+
+def render_with_current_app(func):
+    @wraps(func)
+    def wrapper(self, context, instance, placeholder):
+        with mock_current_app(instance.app):
+            return func(self, context, instance, placeholder)
+
+    return wrapper
 
 
 class ZinniaCMSPluginBase(CMSPluginBase):
@@ -48,7 +69,7 @@ class CMSLatestEntriesPlugin(ZinniaCMSPluginBase):
             ('number_of_entries', 'offset'),
             'template_to_render')}),
         (_('Filters'), {'fields': (
-            'featured',
+            'featured', 'app',
             ('categories', 'subcategories'),
             'authors', 'tags'),
          'classes': ('collapse',)}),)
@@ -64,6 +85,7 @@ class CMSLatestEntriesPlugin(ZinniaCMSPluginBase):
         return super(CMSLatestEntriesPlugin, self).formfield_for_manytomany(
             db_field, request, **kwargs)
 
+    @render_with_current_app
     def render(self, context, instance, placeholder):
         """
         Update the context with plugin's data

@@ -5,6 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.encoding import python_2_unicode_compatible
 
 from cms.models.pluginmodel import CMSPlugin
+from zinnia.settings import APPLICATION_INSTANCE_CHOICES,\
+    _INSTANCE_CHOICE_MAX_LENGTH
 
 from cmsplugin_zinnia.settings import PLUGINS_TEMPLATES
 
@@ -15,8 +17,18 @@ TEMPLATES = [
     + PLUGINS_TEMPLATES
 
 
+class ZinniaAppInstanceAbstract(CMSPlugin):
+    app = models.CharField(
+        _('application'), db_index=True, choices=APPLICATION_INSTANCE_CHOICES,
+        default=APPLICATION_INSTANCE_CHOICES[0][0], blank=True,
+        max_length=_INSTANCE_CHOICE_MAX_LENGTH)
+
+    class Meta:
+        abstract = True
+
+
 @python_2_unicode_compatible
-class LatestEntriesPlugin(CMSPlugin):
+class LatestEntriesPlugin(ZinniaAppInstanceAbstract):
     """
     CMS Plugin for displaying latest entries
     """
